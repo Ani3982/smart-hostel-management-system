@@ -49,3 +49,7 @@ uploads/*
 *.sw?
 .DS_Store
 Thumbs.db
+
+# Nested extract folder & helper script
+Smart-Hostel-Management-System-main/
+run.bat

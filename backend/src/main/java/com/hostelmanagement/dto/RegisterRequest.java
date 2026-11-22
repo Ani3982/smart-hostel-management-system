@@ -3,6 +3,7 @@ package com.hostelmanagement.dto;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import java.time.LocalDate;
 
@@ -19,7 +20,7 @@ public class RegisterRequest {
     private String gender;
 
     @NotBlank(message = "Mobile number is required")
-    @Size(min = 10, max = 15, message = "Mobile number must be between 10 and 15 digits")
+    @Pattern(regexp = "^[0-9]{10}$", message = "Mobile number must be exactly 10 digits")
     private String mobile;
 
     @NotBlank(message = "Email is required")
@@ -36,6 +37,7 @@ public class RegisterRequest {
     private String state;
 
     @NotBlank(message = "PIN code is required")
+    @Pattern(regexp = "^[0-9]{6}$", message = "PIN code must be exactly 6 digits")
     private String pincode;
 
     // Academic Info
@@ -61,9 +63,11 @@ public class RegisterRequest {
     private String parentName;
 
     @NotBlank(message = "Parent mobile is required")
+    @Pattern(regexp = "^[0-9]{10}$", message = "Parent mobile number must be exactly 10 digits")
     private String parentMobile;
 
     @NotBlank(message = "Emergency contact is required")
+    @Pattern(regexp = "^[0-9]{10}$", message = "Emergency contact must be exactly 10 digits")
     private String emergencyContact;
 
     // Hostel Preference

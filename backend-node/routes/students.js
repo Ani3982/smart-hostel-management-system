@@ -114,6 +114,49 @@ router.put('/:id', authenticate, async (req, res) => {
       parentMobile, emergencyContact
     } = req.body;
 
+    // Strict 10-digit mobile number validation
+    const mobileRegex = /^[0-9]{10}$/;
+    if (mobile !== undefined && mobile !== null) {
+      const cleanMobile = String(mobile).replace(/\D/g, '');
+      if (!cleanMobile || cleanMobile.length !== 10) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid mobile number. Only 10-digit mobile number is allowed.',
+          data: null
+        });
+      }
+    }
+    if (parentMobile !== undefined && parentMobile !== null && String(parentMobile).trim() !== '') {
+      const cleanParentMobile = String(parentMobile).replace(/\D/g, '');
+      if (cleanParentMobile.length !== 10) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid parent mobile number. Only 10-digit mobile number is allowed.',
+          data: null
+        });
+      }
+    }
+    if (emergencyContact !== undefined && emergencyContact !== null && String(emergencyContact).trim() !== '') {
+      const cleanEmergency = String(emergencyContact).replace(/\D/g, '');
+      if (cleanEmergency.length !== 10) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid emergency contact number. Only 10-digit number is allowed.',
+          data: null
+        });
+      }
+    }
+    if (pincode !== undefined && pincode !== null) {
+      const cleanPincode = String(pincode).replace(/\D/g, '');
+      if (!cleanPincode || cleanPincode.length !== 6) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid PIN code. Only 6-digit PIN code is allowed.',
+          data: null
+        });
+      }
+    }
+
     await pool.query(`
       UPDATE students SET
         full_name = COALESCE(?, full_name),

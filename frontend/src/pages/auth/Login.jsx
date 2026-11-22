@@ -32,10 +32,37 @@ export const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+
+    const inputVal = email.trim();
+    const digitsOnly = inputVal.replace(/[\s+-]/g, '');
+
+    // Mobile number validation: If user inputs a mobile number, strictly enforce 10 digits
+    if (/^\d+$/.test(digitsOnly) && !inputVal.includes('@')) {
+      if (digitsOnly.length !== 10) {
+        setError(
+          lang === 'mr'
+            ? 'अवैध मोबाईल क्रमांक! फक्त १० अंकी मोबाईल नंबर अनुमत आहे.'
+            : 'Invalid mobile number! Exactly 10 digits are required.'
+        );
+        return;
+      }
+    } else {
+      // Email validation: If user inputs an email address, validate format
+      const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+      if (!emailRegex.test(inputVal)) {
+        setError(
+          lang === 'mr'
+            ? 'अवैध ईमेल पत्ता! कृपया वैध ईमेल आयडी प्रविष्ट करा (उदा. student@example.com).'
+            : 'Invalid email address format! Please enter a valid email (e.g., student@example.com).'
+        );
+        return;
+      }
+    }
+
     setLoading(true);
 
     try {
-      const authData = await login(email.trim(), password.trim());
+      const authData = await login(inputVal, password.trim());
       const role = (authData.role || '').toUpperCase().replace(/^ROLE_/, '');
 
       // Automatic Role-Based Navigation
@@ -50,7 +77,9 @@ export const Login = () => {
       const status = err.response?.status;
       const serverMsg = err.response?.data?.message || err.message || '';
 
-      if (status === 403 || serverMsg.toLowerCase().includes('inactive')) {
+      if (serverMsg && (serverMsg.includes('10-digit') || serverMsg.includes('10 digits'))) {
+        setError(lang === 'mr' ? 'अवैध मोबाईल क्रमांक! फक्त १० अंकी मोबाईल नंबर अनुमत आहे.' : serverMsg);
+      } else if (status === 403 || serverMsg.toLowerCase().includes('inactive')) {
         setError(
           lang === 'mr'
             ? 'तुमचे खाते निष्क्रिय आहे. कृपया प्रशासकाशी संपर्क साधा.'
@@ -59,8 +88,8 @@ export const Login = () => {
       } else if (status === 401 || serverMsg.toLowerCase().includes('invalid')) {
         setError(
           lang === 'mr'
-            ? 'अवैध ईमेल किंवा पासवर्ड.'
-            : 'Invalid email or password.'
+            ? 'अवैध ईमेल/मोबाईल क्रमांक किंवा पासवर्ड.'
+            : 'Invalid email/mobile number or password.'
         );
       } else {
         setError(
@@ -172,22 +201,22 @@ export const Login = () => {
 
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
             
-            {/* Email Address */}
+            {/* Email Address or Mobile */}
             <div className="form-group" style={{ marginBottom: 0 }}>
               <label className="form-label" style={{ fontWeight: 700 }}>
-                {lang === 'mr' ? 'ईमेल पत्ता' : 'Email Address'}
+                {lang === 'mr' ? 'ईमेल किंवा १० अंकी मोबाईल क्रमांक' : 'Email Address or 10-Digit Mobile Number'}
               </label>
               <div style={{ position: 'relative' }}>
                 <Mail size={18} color="#94a3b8" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
                 <input
-                  type="email"
+                  type="text"
                   className="form-input"
                   style={{ paddingLeft: '38px' }}
-                  placeholder={lang === 'mr' ? 'तुमचा नोंदणीकृत ईमेल प्रविष्ट करा' : 'Enter your registered email'}
+                  placeholder={lang === 'mr' ? 'उदा. student@example.com किंवा ९८२२३३४४५५' : 'e.g. student@example.com or 10-digit mobile'}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  autoComplete="email"
+                  autoComplete="username"
                 />
               </div>
             </div>

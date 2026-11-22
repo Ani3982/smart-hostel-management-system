@@ -179,6 +179,45 @@ export const Register = () => {
       return;
     }
 
+    // Mobile number validation: only 10 digits allowed
+    const cleanMobile = (formData.mobile || '').replace(/\D/g, '');
+    if (!cleanMobile || cleanMobile.length !== 10) {
+      setError(lang === 'mr' ? 'अवैध मोबाईल क्रमांक! फक्त १० अंकी मोबाईल नंबर अनुमत आहे.' : 'Invalid mobile number! Exactly 10 digits are required.');
+      window.scrollTo({ top: 400, behavior: 'smooth' });
+      return;
+    }
+
+    const cleanParentMobile = (formData.parentMobile || '').replace(/\D/g, '');
+    if (!cleanParentMobile || cleanParentMobile.length !== 10) {
+      setError(lang === 'mr' ? 'पालकांचा मोबाईल क्रमांक अवैध आहे! फक्त १० अंकी मोबाईल नंबर अनुमत आहे.' : 'Invalid parent mobile number! Exactly 10 digits are required.');
+      window.scrollTo({ top: 700, behavior: 'smooth' });
+      return;
+    }
+
+    const cleanEmergency = (formData.emergencyContact || '').replace(/\D/g, '');
+    if (!cleanEmergency || cleanEmergency.length !== 10) {
+      setError(lang === 'mr' ? 'आपत्कालीन संपर्क क्रमांक अवैध आहे! फक्त १० अंकी नंबर अनुमत आहे.' : 'Invalid emergency contact number! Exactly 10 digits are required.');
+      window.scrollTo({ top: 700, behavior: 'smooth' });
+      return;
+    }
+
+    // Email format validation
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    const cleanEmail = (formData.email || '').trim().toLowerCase();
+    if (!cleanEmail || !emailRegex.test(cleanEmail)) {
+      setError(lang === 'mr' ? 'अवैध ईमेल पत्ता! कृपया वैध ईमेल प्रविष्ट करा (उदा. student@example.com).' : 'Invalid email address! Please enter a valid email (e.g., student@example.com).');
+      window.scrollTo({ top: 400, behavior: 'smooth' });
+      return;
+    }
+
+    // Pincode validation: only 6 digits allowed
+    const cleanPincode = (formData.pincode || '').replace(/\D/g, '');
+    if (!cleanPincode || cleanPincode.length !== 6) {
+      setError(lang === 'mr' ? 'अवैध पिनकोड! फक्त ६ अंकी पिनकोड अनुमत आहे.' : 'Invalid PIN code! Exactly 6 digits are required.');
+      window.scrollTo({ top: 400, behavior: 'smooth' });
+      return;
+    }
+
     // Client-side validations
     if (formData.password !== formData.confirmPassword) {
       setError(lang === 'mr' ? 'पासवर्ड आणि खात्री पासवर्ड जुळत नाहीत' : 'Password and confirm password do not match');
@@ -661,11 +700,22 @@ export const Register = () => {
                     type="tel"
                     className="form-input"
                     name="mobile"
+                    maxLength={10}
+                    pattern="[0-9]{10}"
                     placeholder={lang === 'mr' ? '१० अंकी मोबाईल क्रमांक' : '10-digit mobile number'}
                     value={formData.mobile}
-                    onChange={handleChange}
+                    onChange={(e) => {
+                      const digits = e.target.value.replace(/\D/g, '').slice(0, 10);
+                      setFormData(prev => ({ ...prev, mobile: digits }));
+                    }}
                     required
                   />
+                  {formData.mobile && formData.mobile.length !== 10 && (
+                    <div style={{ color: '#ef4444', fontSize: '0.8rem', marginTop: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                      <AlertCircle size={14} />
+                      <span>{lang === 'mr' ? 'फक्त १० अंकी मोबाईल नंबर अनुमत आहे (सध्या: ' + formData.mobile.length + '/१०)' : 'Only 10-digit mobile number is allowed (current: ' + formData.mobile.length + '/10)'}</span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="form-group">
@@ -679,6 +729,12 @@ export const Register = () => {
                     onChange={handleChange}
                     required
                   />
+                  {formData.email && !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(formData.email.trim()) && (
+                    <div style={{ color: '#ef4444', fontSize: '0.8rem', marginTop: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                      <AlertCircle size={14} />
+                      <span>{lang === 'mr' ? 'कृपया वैध ईमेल प्रविष्ट करा (उदा. student@example.com)' : 'Please enter a valid email address (e.g., student@example.com)'}</span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="form-group">
@@ -724,10 +780,22 @@ export const Register = () => {
                     type="text"
                     className="form-input"
                     name="pincode"
+                    maxLength={6}
+                    pattern="[0-9]{6}"
+                    placeholder="414001"
                     value={formData.pincode}
-                    onChange={handleChange}
+                    onChange={(e) => {
+                      const digits = e.target.value.replace(/\D/g, '').slice(0, 6);
+                      setFormData(prev => ({ ...prev, pincode: digits }));
+                    }}
                     required
                   />
+                  {formData.pincode && formData.pincode.length !== 6 && (
+                    <div style={{ color: '#ef4444', fontSize: '0.8rem', marginTop: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                      <AlertCircle size={14} />
+                      <span>{lang === 'mr' ? 'फक्त ६ अंकी पिनकोड अनुमत आहे (सध्या: ' + formData.pincode.length + '/६)' : 'Only 6-digit PIN code is allowed (current: ' + formData.pincode.length + '/6)'}</span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -973,11 +1041,22 @@ export const Register = () => {
                     type="tel"
                     className="form-input"
                     name="parentMobile"
-                    placeholder={lang === 'mr' ? 'पालकांचा मोबाईल क्रमांक' : 'Parent mobile number'}
+                    maxLength={10}
+                    pattern="[0-9]{10}"
+                    placeholder={lang === 'mr' ? '१० अंकी पालकांचा मोबाईल क्रमांक' : '10-digit parent mobile number'}
                     value={formData.parentMobile}
-                    onChange={handleChange}
+                    onChange={(e) => {
+                      const digits = e.target.value.replace(/\D/g, '').slice(0, 10);
+                      setFormData(prev => ({ ...prev, parentMobile: digits }));
+                    }}
                     required
                   />
+                  {formData.parentMobile && formData.parentMobile.length !== 10 && (
+                    <div style={{ color: '#ef4444', fontSize: '0.8rem', marginTop: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                      <AlertCircle size={14} />
+                      <span>{lang === 'mr' ? 'फक्त १० अंकी मोबाईल नंबर अनुमत आहे (सध्या: ' + formData.parentMobile.length + '/१०)' : 'Only 10-digit mobile number is allowed (current: ' + formData.parentMobile.length + '/10)'}</span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="form-group">
@@ -986,11 +1065,22 @@ export const Register = () => {
                     type="tel"
                     className="form-input"
                     name="emergencyContact"
-                    placeholder={lang === 'mr' ? 'आपत्कालीन फोन क्रमांक' : 'Emergency phone number'}
+                    maxLength={10}
+                    pattern="[0-9]{10}"
+                    placeholder={lang === 'mr' ? '१० अंकी आपत्कालीन फोन क्रमांक' : '10-digit emergency contact'}
                     value={formData.emergencyContact}
-                    onChange={handleChange}
+                    onChange={(e) => {
+                      const digits = e.target.value.replace(/\D/g, '').slice(0, 10);
+                      setFormData(prev => ({ ...prev, emergencyContact: digits }));
+                    }}
                     required
                   />
+                  {formData.emergencyContact && formData.emergencyContact.length !== 10 && (
+                    <div style={{ color: '#ef4444', fontSize: '0.8rem', marginTop: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                      <AlertCircle size={14} />
+                      <span>{lang === 'mr' ? 'फक्त १० अंकी मोबाईल नंबर अनुमत आहे (सध्या: ' + formData.emergencyContact.length + '/१०)' : 'Only 10-digit mobile number is allowed (current: ' + formData.emergencyContact.length + '/10)'}</span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

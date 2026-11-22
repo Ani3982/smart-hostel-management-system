@@ -42,12 +42,45 @@ export const StudentProfile = () => {
 
   const handleSave = async (e) => {
     e.preventDefault();
-    setSaving(true);
     setError('');
     setSuccess('');
 
+    // Mobile number validation: only 10 digits allowed
+    const cleanMobile = (student.mobile || '').replace(/\D/g, '');
+    if (!cleanMobile || cleanMobile.length !== 10) {
+      setError(lang === 'mr' ? 'अवैध मोबाईल क्रमांक! फक्त १० अंकी मोबाईल नंबर अनुमत आहे.' : 'Invalid mobile number! Exactly 10 digits are required.');
+      return;
+    }
+
+    const cleanParentMobile = (student.parentMobile || '').replace(/\D/g, '');
+    if (cleanParentMobile && cleanParentMobile.length !== 10) {
+      setError(lang === 'mr' ? 'पालकांचा मोबाईल क्रमांक अवैध आहे! फक्त १० अंकी मोबाईल नंबर अनुमत आहे.' : 'Invalid parent mobile number! Exactly 10 digits are required.');
+      return;
+    }
+
+    const cleanEmergency = (student.emergencyContact || '').replace(/\D/g, '');
+    if (cleanEmergency && cleanEmergency.length !== 10) {
+      setError(lang === 'mr' ? 'आपत्कालीन संपर्क क्रमांक अवैध आहे! फक्त १० अंकी नंबर अनुमत आहे.' : 'Invalid emergency contact number! Exactly 10 digits are required.');
+      return;
+    }
+
+    // Pincode validation: only 6 digits allowed
+    const cleanPincode = (student.pincode || '').replace(/\D/g, '');
+    if (!cleanPincode || cleanPincode.length !== 6) {
+      setError(lang === 'mr' ? 'अवैध पिनकोड! फक्त ६ अंकी पिनकोड अनुमत आहे.' : 'Invalid PIN code! Exactly 6 digits are required.');
+      return;
+    }
+
+    setSaving(true);
+
     try {
-      const res = await studentService.update(student.id, student);
+      const res = await studentService.update(student.id, {
+        ...student,
+        mobile: cleanMobile,
+        parentMobile: cleanParentMobile,
+        emergencyContact: cleanEmergency,
+        pincode: cleanPincode
+      });
       if (res.data.success) {
         setStudent(res.data.data);
         setSuccess(lang === 'mr' ? 'विद्यार्थी प्रोफाईल माहिती यशस्वीरीत्या अद्ययावत झाली!' : 'Profile updated successfully!');
@@ -139,8 +172,26 @@ export const StudentProfile = () => {
             </div>
 
             <div className="form-group">
-              <label className="form-label">{t('mobile')}</label>
-              <input type="tel" className="form-input" name="mobile" value={student.mobile} onChange={handleChange} required />
+              <label className="form-label">{t('mobile')} *</label>
+              <input 
+                type="tel" 
+                className="form-input" 
+                name="mobile" 
+                maxLength={10}
+                pattern="[0-9]{10}"
+                value={student.mobile} 
+                onChange={(e) => {
+                  const digits = e.target.value.replace(/\D/g, '').slice(0, 10);
+                  setStudent(prev => ({ ...prev, mobile: digits }));
+                }} 
+                required 
+              />
+              {student.mobile && student.mobile.length !== 10 && (
+                <div style={{ color: '#ef4444', fontSize: '0.8rem', marginTop: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                  <AlertCircle size={14} />
+                  <span>{lang === 'mr' ? 'फक्त १० अंकी मोबाईल नंबर अनुमत आहे (सध्या: ' + student.mobile.length + '/१०)' : 'Only 10-digit mobile number is allowed (current: ' + student.mobile.length + '/10)'}</span>
+                </div>
+              )}
             </div>
 
             <div className="form-group grid-span-all">
@@ -160,7 +211,26 @@ export const StudentProfile = () => {
 
             <div className="form-group">
               <label className="form-label">{t('pincode')}</label>
-              <input type="text" className="form-input" name="pincode" value={student.pincode} onChange={handleChange} required />
+              <input 
+                type="text" 
+                className="form-input" 
+                name="pincode" 
+                maxLength={6}
+                pattern="[0-9]{6}"
+                placeholder="414001"
+                value={student.pincode} 
+                onChange={(e) => {
+                  const digits = e.target.value.replace(/\D/g, '').slice(0, 6);
+                  setStudent(prev => ({ ...prev, pincode: digits }));
+                }} 
+                required 
+              />
+              {student.pincode && student.pincode.length !== 6 && (
+                <div style={{ color: '#ef4444', fontSize: '0.8rem', marginTop: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                  <AlertCircle size={14} />
+                  <span>{lang === 'mr' ? 'फक्त ६ अंकी पिनकोड अनुमत आहे (सध्या: ' + student.pincode.length + '/६)' : 'Only 6-digit PIN code is allowed (current: ' + student.pincode.length + '/6)'}</span>
+                </div>
+              )}
             </div>
           </div>
 
@@ -206,12 +276,48 @@ export const StudentProfile = () => {
 
             <div className="form-group">
               <label className="form-label">{t('parentMobile')}</label>
-              <input type="tel" className="form-input" name="parentMobile" value={student.parentMobile} onChange={handleChange} required />
+              <input 
+                type="tel" 
+                className="form-input" 
+                name="parentMobile" 
+                maxLength={10}
+                pattern="[0-9]{10}"
+                value={student.parentMobile} 
+                onChange={(e) => {
+                  const digits = e.target.value.replace(/\D/g, '').slice(0, 10);
+                  setStudent(prev => ({ ...prev, parentMobile: digits }));
+                }} 
+                required 
+              />
+              {student.parentMobile && student.parentMobile.length !== 10 && (
+                <div style={{ color: '#ef4444', fontSize: '0.8rem', marginTop: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                  <AlertCircle size={14} />
+                  <span>{lang === 'mr' ? 'फक्त १० अंकी मोबाईल नंबर अनुमत आहे (सध्या: ' + student.parentMobile.length + '/१०)' : 'Only 10-digit mobile number is allowed (current: ' + student.parentMobile.length + '/10)'}</span>
+                </div>
+              )}
             </div>
 
             <div className="form-group">
               <label className="form-label">{t('emergencyContact')}</label>
-              <input type="tel" className="form-input" name="emergencyContact" value={student.emergencyContact} onChange={handleChange} required />
+              <input 
+                type="tel" 
+                className="form-input" 
+                name="emergencyContact" 
+                maxLength={10}
+                pattern="[0-9]{10}"
+                value={student.emergencyContact} 
+                onChange={(e) => {
+                  const digits = e.target.value.replace(/\D/g, '').slice(0, 10);
+                  setStudent(prev => ({ ...prev, emergencyContact: digits }));
+                }} 
+                required 
+              />
+              {student.emergencyContact && student.emergencyContact.length !== 10 && (
+                <div style={{ color: '#ef4444', fontSize: '0.8rem', marginTop: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                  <AlertCircle size={14} />
+                  <span>{lang === 'mr' ? 'फक्त १० अंकी मोबाईल नंबर अनुमत आहे (सध्या: ' + student.emergencyContact.length + '/१०)' : 'Only 10-digit mobile number is allowed (current: ' + student.emergencyContact.length + '/10)'}</span>
+                </div>
+              )}
             </div>
           </div>
 

@@ -8,17 +8,55 @@ const { authenticate, JWT_SECRET } = require('../middleware/auth');
 // POST /api/auth/login
 router.post('/login', async (req, res) => {
   try {
-    const rawEmail = req.body.email || req.body.usernameOrEmail || req.body.username;
+    const rawEmail = req.body.email || req.body.usernameOrEmail || req.body.username || req.body.mobile;
     const rawPassword = req.body.password;
     if (!rawEmail || !rawPassword) {
       return res.status(400).json({ success: false, message: 'Invalid email or password.', data: null });
     }
 
-    const email = String(rawEmail).trim().toLowerCase();
+    const inputTrimmed = String(rawEmail).trim();
+    const cleanDigits = inputTrimmed.replace(/[\s+-]/g, '');
+    const isDigitsOnly = /^\d+$/.test(cleanDigits);
+
+    // If attempting to login via phone/mobile, strictly enforce 10 digits
+    if (isDigitsOnly && !inputTrimmed.includes('@')) {
+      if (cleanDigits.length !== 10) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid mobile number. Only 10-digit mobile number is allowed.',
+          data: null
+        });
+      }
+    } else {
+      // Email format validation
+      const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+      if (!emailRegex.test(inputTrimmed)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid email address format. Please enter a valid email address.',
+          data: null
+        });
+      }
+    }
+
+    const email = inputTrimmed.toLowerCase();
     const password = String(rawPassword).trim();
 
     let [users] = await pool.query('SELECT * FROM app_users WHERE LOWER(TRIM(email)) = LOWER(?)', [email]);
     
+    // Check if input matches student or warden mobile number (when 10 digits)
+    if (users.length === 0 && isDigitsOnly && cleanDigits.length === 10) {
+      const [stuRows] = await pool.query('SELECT user_id FROM students WHERE TRIM(mobile) = ? LIMIT 1', [cleanDigits]);
+      if (stuRows.length > 0) {
+        [users] = await pool.query('SELECT * FROM app_users WHERE id = ?', [stuRows[0].user_id]);
+      } else {
+        const [wardenRows] = await pool.query('SELECT user_id FROM hostel_heads WHERE TRIM(mobile) = ? LIMIT 1', [cleanDigits]);
+        if (wardenRows.length > 0) {
+          [users] = await pool.query('SELECT * FROM app_users WHERE id = ?', [wardenRows[0].user_id]);
+        }
+      }
+    }
+
     // Support warden alias emails if not directly matching
     if (users.length === 0) {
       if (email === 'wardenboys@college.com') {
@@ -186,7 +224,57 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ success: false, message: 'Full name, email and password are required', data: null });
     }
 
-    const [existing] = await connection.query('SELECT id FROM app_users WHERE email = ?', [email]);
+    // Strict 10-digit mobile number validation
+    const mobileRegex = /^[0-9]{10}$/;
+    const cleanMobile = String(mobile || '').replace(/\D/g, '');
+    if (!cleanMobile || cleanMobile.length !== 10) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid mobile number. Only 10-digit mobile number is allowed.',
+        data: null
+      });
+    }
+
+    const cleanParentMobile = String(parentMobile || '').replace(/\D/g, '');
+    if (!cleanParentMobile || cleanParentMobile.length !== 10) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid parent mobile number. Only 10-digit mobile number is allowed.',
+        data: null
+      });
+    }
+
+    const cleanEmergency = String(emergencyContact || '').replace(/\D/g, '');
+    if (!cleanEmergency || cleanEmergency.length !== 10) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid emergency contact number. Only 10-digit number is allowed.',
+        data: null
+      });
+    }
+
+    // Email format validation
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    const cleanEmail = String(email || '').trim().toLowerCase();
+    if (!cleanEmail || !emailRegex.test(cleanEmail)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid email address format. Please provide a valid email (e.g. user@example.com).',
+        data: null
+      });
+    }
+
+    // Pincode validation: only 6 digits allowed
+    const cleanPincode = String(pincode || '').replace(/\D/g, '');
+    if (!cleanPincode || cleanPincode.length !== 6) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid PIN code. Only 6-digit PIN code is allowed.',
+        data: null
+      });
+    }
+
+    const [existing] = await connection.query('SELECT id FROM app_users WHERE email = ?', [cleanEmail]);
     if (existing.length > 0) {
       return res.status(400).json({ success: false, message: 'User already exists with this email', data: null });
     }
