@@ -219,7 +219,14 @@ export const translations = {
     roomCapacity: "क्षमता",
     floorNumber: "मजला",
     backToDashboard: "डॅशबोर्डवर परत जा",
-    switchLanguagePrompt: "भाषा बदला (Switch Language):"
+    switchLanguagePrompt: "भाषा बदला (Switch Language):",
+    pageTitle: "न्यू आर्ट्स, कॉमर्स अँड सायन्स कॉलेज, अहिल्यानगर (स्वायत्त) | वसतिगृह पोर्टल",
+    pageDescription: "न्यू आर्ट्स, कॉमर्स अँड सायन्स कॉलेज, अहिल्यानगर (स्वायत्त) येथील मुले व मुलींच्या वसतिगृहासाठी अधिकृत ऑनलाईन प्रवेश, थेट खाटांची उपलब्धता आणि शुल्क भरणा प्रणाली.",
+    checkAppStatus: "अर्जाची स्थिती तपासा",
+    docsAndFeesFaq: "कागदपत्रे व शुल्क माहिती (FAQ)",
+    seatMatrixTitle: "खोल्या व खाटांचा थेट आराखडा (Seat Matrix)",
+    helpdeskTitle: "अधिकृत वसतिगृह हेल्पडेस्क व संपर्क",
+    officeHoursText: "सोमवार – शनिवार: सकाळी १०:०० ते सायं. ५:३०"
   },
   
   en: {
@@ -438,7 +445,14 @@ export const translations = {
     roomCapacity: "Capacity",
     floorNumber: "Floor",
     backToDashboard: "Back to Dashboard",
-    switchLanguagePrompt: "Select Language:"
+    switchLanguagePrompt: "Select Language:",
+    pageTitle: "New Arts, Commerce & Science College, Ahilyanagar (Autonomous) | Hostel Portal",
+    pageDescription: "Official bilingual online hostel admission, live room & bed availability matrix, fee payment, and student portal for New Arts, Commerce & Science College, Ahilyanagar (Autonomous).",
+    checkAppStatus: "Check Application Status",
+    docsAndFeesFaq: "Documents & Fee Breakdown (FAQ)",
+    seatMatrixTitle: "Interactive Room & Bed Seat Matrix",
+    helpdeskTitle: "Official Hostel Helpdesk & Support",
+    officeHoursText: "Mon – Sat: 10:00 AM – 5:30 PM"
   }
 };
 
@@ -451,12 +465,28 @@ export const LanguageProvider = ({ children }) => {
 
   useEffect(() => {
     localStorage.setItem('hostel_lang', lang);
+    const activeCopy = translations[lang] || translations.en;
+
     if (lang === 'mr') {
       document.body.classList.add('lang-mr');
       document.documentElement.lang = 'mr';
     } else {
       document.body.classList.remove('lang-mr');
       document.documentElement.lang = 'en';
+    }
+
+    // Dynamically update document title and meta description for active language
+    if (activeCopy.pageTitle) {
+      document.title = activeCopy.pageTitle;
+    }
+    if (activeCopy.pageDescription) {
+      let metaDesc = document.querySelector('meta[name="description"]');
+      if (!metaDesc) {
+        metaDesc = document.createElement('meta');
+        metaDesc.setAttribute('name', 'description');
+        document.head.appendChild(metaDesc);
+      }
+      metaDesc.setAttribute('content', activeCopy.pageDescription);
     }
   }, [lang]);
 

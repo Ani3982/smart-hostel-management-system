@@ -62,6 +62,149 @@ const APP_SELECT = `
   JOIN hostels h ON a.hostel_id = h.id
 `;
 
+// POST /api/applications/public-status
+// Public 5-stage application progress lookup via Application ID / Student PRN + DOB or Roll Number
+router.post('/public-status', async (req, res) => {
+  try {
+    const rawAppId = String(req.body.applicationId || '').trim();
+    const rawVerifier = String(req.body.verifier || '').trim();
+
+    if (!rawAppId || !rawVerifier) {
+      return res.status(400).json({
+        success: false,
+        message: 'Application ID / PRN and Date of Birth or Roll Number are required.',
+        data: null
+      });
+    }
+
+    const numericIdMatch = rawAppId.match(/^(?:APP-)?(\d+)$/i);
+    const numericId = numericIdMatch ? parseInt(numericIdMatch[1], 10) : null;
+
+    const [rows] = await pool.query(
+      `SELECT a.id AS application_id, a.application_date, a.status, a.preferred_room_type,
+              a.approved_by, a.approved_date, a.rejection_reason,
+              s.id AS student_db_id, s.student_id AS student_prn, s.full_name,
+              DATE_FORMAT(s.dob, '%Y-%m-%d') AS dob_formatted, s.roll_number, s.course, s.academic_year,
+              h.id AS hostel_id, h.hostel_name, h.hostel_type
+       FROM applications a
+       JOIN students s ON a.student_id = s.id
+       JOIN hostels h ON a.hostel_id = h.id
+       WHERE (a.id = ? OR UPPER(TRIM(s.student_id)) = UPPER(?))
+         AND (DATE_FORMAT(s.dob, '%Y-%m-%d') = ? OR UPPER(TRIM(s.roll_number)) = UPPER(?))
+       ORDER BY a.id DESC
+       LIMIT 1`,
+      [numericId || -1, rawAppId, rawVerifier, rawVerifier]
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'No matching application found. Verify your Application ID / PRN and DOB or Roll Number.',
+        data: null
+      });
+    }
+
+    const app = rows[0];
+
+    const [[allocRows], [payRows], [docRows]] = await Promise.all([
+      pool.query(
+        `SELECT al.allocation_date, r.room_number, r.floor, b.bed_number
+         FROM allocations al
+         JOIN rooms r ON al.room_id = r.id
+         JOIN beds b ON al.bed_id = b.id
+         WHERE al.student_id = ? AND al.status = 'ACTIVE'
+         ORDER BY al.id DESC LIMIT 1`,
+        [app.student_db_id]
+      ),
+      pool.query(
+        `SELECT receipt_number, status, payment_date, amount
+         FROM payments
+         WHERE application_id = ? AND status = 'SUCCESS'
+         ORDER BY id DESC LIMIT 1`,
+        [app.application_id]
+      ),
+      pool.query(
+        `SELECT COUNT(*) AS docCount FROM documents WHERE student_id = ?`,
+        [app.student_db_id]
+      )
+    ]);
+
+    const allocation = allocRows[0] || null;
+    const payment = payRows[0] || null;
+    const docCount = Number(docRows[0]?.docCount || 0);
+
+    const isApproved = app.status === 'APPROVED';
+    const isRejected = app.status === 'REJECTED';
+
+    const stages = [
+      {
+        step: 1,
+        key: 'REGISTRATION',
+        status: 'COMPLETED',
+        date: app.application_date
+      },
+      {
+        step: 2,
+        key: 'APPLICATION',
+        status: 'COMPLETED',
+        detail: docCount > 0 ? `${docCount} documents uploaded` : 'Application submitted',
+        date: app.application_date
+      },
+      {
+        step: 3,
+        key: 'WARDEN_REVIEW',
+        status: isApproved ? 'COMPLETED' : isRejected ? 'REJECTED' : 'IN_PROGRESS',
+        detail: isApproved ? `Approved by ${app.approved_by || 'Warden'}` : isRejected ? (app.rejection_reason || 'Criteria not met') : 'Under Warden verification',
+        date: app.approved_date || null
+      },
+      {
+        step: 4,
+        key: 'ALLOCATION',
+        status: allocation ? 'COMPLETED' : isRejected ? 'BLOCKED' : isApproved ? 'IN_PROGRESS' : 'PENDING',
+        detail: allocation ? `Room ${allocation.room_number}, Bed ${allocation.bed_number}` : null,
+        date: allocation?.allocation_date || null
+      },
+      {
+        step: 5,
+        key: 'PAYMENT',
+        status: payment ? 'COMPLETED' : isRejected ? 'BLOCKED' : allocation ? 'IN_PROGRESS' : 'PENDING',
+        detail: payment ? `Receipt: ${payment.receipt_number}` : null,
+        date: payment?.payment_date || null
+      }
+    ];
+
+    return res.json({
+      success: true,
+      message: 'Application status retrieved',
+      data: {
+        applicationId: app.application_id,
+        applicationCode: `APP-${String(app.application_id).padStart(4, '0')}`,
+        studentPrn: app.student_prn,
+        studentName: app.full_name,
+        course: app.course,
+        academicYear: app.academic_year,
+        hostelName: app.hostel_name,
+        hostelType: app.hostel_type,
+        status: app.status,
+        rejectionReason: app.rejection_reason,
+        allocation: allocation ? {
+          roomNumber: allocation.room_number,
+          floor: allocation.floor,
+          bedNumber: allocation.bed_number
+        } : null,
+        payment: payment ? {
+          receiptNumber: payment.receipt_number,
+          amount: payment.amount,
+          status: payment.status
+        } : null,
+        stages
+      }
+    });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: err.message, data: null });
+  }
+});
+
 // GET /api/applications
 router.get('/', authenticate, authorize('BOYS_WARDEN', 'GIRLS_WARDEN', 'HOSTEL_HEAD'), async (req, res) => {
   try {

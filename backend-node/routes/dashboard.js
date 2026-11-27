@@ -144,4 +144,81 @@ router.get('/public/summary', async (req, res) => {
   }
 });
 
+// GET /api/dashboard/public/matrix
+// Privacy-preserving public seat matrix: floors, rooms, and bed statuses (no student PII)
+router.get('/public/matrix', async (req, res) => {
+  try {
+    const requestedType = req.query.hostelType ? String(req.query.hostelType).toUpperCase() : null;
+    let hostelQuery = 'SELECT id, hostel_name AS hostelName, hostel_type AS hostelType, address, total_rooms AS totalRooms FROM hostels WHERE status = "ACTIVE"';
+    const hostelParams = [];
+    if (requestedType === 'BOYS' || requestedType === 'GIRLS') {
+      hostelQuery += ' AND hostel_type = ?';
+      hostelParams.push(requestedType);
+    }
+    hostelQuery += ' ORDER BY id ASC';
+
+    const [hostels] = await pool.query(hostelQuery, hostelParams);
+    const hostelIds = hostels.map(h => h.id);
+
+    if (hostelIds.length === 0) {
+      return res.json({ success: true, message: 'No active hostels found', data: [] });
+    }
+
+    const [rooms] = await pool.query(
+      `SELECT id, hostel_id AS hostelId, room_number AS roomNumber, floor, capacity, room_type AS roomType, status
+       FROM rooms
+       WHERE hostel_id IN (?)
+       ORDER BY hostel_id ASC, floor ASC, room_number ASC`,
+      [hostelIds]
+    );
+
+    const roomIds = rooms.map(r => r.id);
+    let beds = [];
+    if (roomIds.length > 0) {
+      const [bedRows] = await pool.query(
+        `SELECT id, room_id AS roomId, bed_number AS bedNumber, status
+         FROM beds
+         WHERE room_id IN (?)
+         ORDER BY bed_number ASC`,
+        [roomIds]
+      );
+      beds = bedRows;
+    }
+
+    const bedsByRoom = beds.reduce((acc, bed) => {
+      if (!acc[bed.roomId]) acc[bed.roomId] = [];
+      acc[bed.roomId].push(bed);
+      return acc;
+    }, {});
+
+    const matrix = hostels.map(h => {
+      const hostelRooms = rooms
+        .filter(r => r.hostelId === h.id)
+        .map(r => ({
+          ...r,
+          beds: bedsByRoom[r.id] || []
+        }));
+
+      const allBeds = hostelRooms.flatMap(r => r.beds);
+      const totalBeds = allBeds.length;
+      const availableBeds = allBeds.filter(b => b.status === 'AVAILABLE').length;
+      const occupiedBeds = allBeds.filter(b => b.status === 'OCCUPIED').length;
+      const maintenanceBeds = allBeds.filter(b => b.status === 'MAINTENANCE' || b.status === 'RESERVED').length;
+
+      return {
+        ...h,
+        totalBeds,
+        availableBeds,
+        occupiedBeds,
+        maintenanceBeds,
+        rooms: hostelRooms
+      };
+    });
+
+    return res.json({ success: true, message: 'Public hostel seat matrix retrieved', data: matrix });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: err.message, data: null });
+  }
+});
+
 module.exports = router;

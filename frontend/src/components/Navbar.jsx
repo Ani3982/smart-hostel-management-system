@@ -79,184 +79,125 @@ export const Navbar = () => {
   };
 
   return (
-    <header style={{
-      backgroundColor: '#ffffff',
-      borderBottom: '1px solid var(--border)',
-      position: 'sticky',
-      top: 0,
-      zIndex: 100,
-      boxShadow: 'var(--shadow-sm)'
-    }}>
-      {/* Official College Masthead Top Bar */}
-      <div style={{
-        backgroundColor: '#0f172a',
-        color: '#f8fafc',
-        padding: '0.35rem clamp(0.65rem, 2vw, 1.25rem)',
-        fontSize: '0.785rem',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        flexWrap: 'wrap',
-        gap: '0.5rem',
-        borderBottom: '1px solid rgba(255,255,255,0.1)'
-      }}>
-        {/* Society & College Title with Emblem */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1, minWidth: 0 }}>
-          <img 
-            src="/college-logo-transparent.png" 
-            alt="NACSC Logo" 
-            style={{ 
-              width: '24px', 
-              height: '24px', 
-              objectFit: 'contain',
-              backgroundColor: 'white',
-              borderRadius: '50%',
-              padding: '1px',
-              flexShrink: 0
-            }} 
-          />
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap', minWidth: 0 }}>
-            <span style={{ 
-              backgroundColor: '#f59e0b', 
-              color: '#0f172a',
-              padding: '0.1rem 0.4rem', 
-              borderRadius: '4px', 
-              fontSize: '0.65rem', 
-              fontWeight: 900,
-              letterSpacing: '0.04em',
-              whiteSpace: 'nowrap'
-            }}>
-              {t('autonomousBadge')}
-            </span>
-            <span className="hide-on-mobile" style={{ fontWeight: 700, color: '#f1f5f9' }}>
-              {t('societyName')}
-            </span>
-            <span className="hide-on-mobile" style={{ color: '#94a3b8' }}>•</span>
-            <span style={{ color: '#38bdf8', fontWeight: 700, fontSize: '0.75rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-              {t('collegeName')}
-            </span>
-          </div>
-        </div>
+    <header className="site-sticky-header">
+      {/* Subtle Official Top Accent Strip */}
+      <div className="header-accent-strip" />
 
-        {/* Language Switcher Bar: Persistent Store Toggle (मराठी & English) */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
-          <span className="hide-on-mobile" style={{ color: '#cbd5e1', fontSize: '0.75rem', fontWeight: 600 }}>
-            {t('switchLanguagePrompt')}
-          </span>
-
-          {/* Segmented Bilingual Selector */}
-          <div style={{
-            display: 'inline-flex',
-            backgroundColor: 'rgba(255, 255, 255, 0.12)',
-            padding: '2px',
-            borderRadius: '20px',
-            border: '1px solid rgba(255, 255, 255, 0.22)'
-          }}>
-            <button 
-              onClick={() => setLang('mr')}
-              title="मराठी भाषेत संपूर्ण वेबसाईट पहा (Full Marathi Website)"
-              style={{
-                backgroundColor: lang === 'mr' ? '#f59e0b' : 'transparent',
-                color: lang === 'mr' ? '#0f172a' : '#cbd5e1',
-                fontWeight: 800,
-                fontSize: '0.725rem',
-                padding: '0.2rem 0.6rem',
-                borderRadius: '16px',
-                border: 'none',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.25rem',
-                transition: 'all 0.18s ease'
-              }}
-            >
-              <span>🇮🇳 मराठी</span>
-              {lang === 'mr' && <CheckCircle size={11} />}
-            </button>
-
-            <button 
-              onClick={() => setLang('en')}
-              title="View in English"
-              style={{
-                backgroundColor: lang === 'en' ? '#ffffff' : 'transparent',
-                color: lang === 'en' ? '#0f172a' : '#cbd5e1',
-                fontWeight: 800,
-                fontSize: '0.725rem',
-                padding: '0.2rem 0.6rem',
-                borderRadius: '16px',
-                border: 'none',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.25rem',
-                transition: 'all 0.18s ease'
-              }}
-            >
-              <span>🇬🇧 English</span>
-              {lang === 'en' && <CheckCircle size={11} />}
-            </button>
-          </div>
-
-          <span className="hide-on-mobile" style={{ color: '#64748b' }}>|</span>
-          <span className="hide-on-mobile" style={{ color: '#94a3b8', fontSize: '0.75rem', fontWeight: 600 }}>
-            {t('naacGrade')}
-          </span>
-        </div>
-      </div>
-
-      {/* Main Navbar */}
-      <div className="container" style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        height: 'var(--header-height, 72px)',
-        padding: '0 clamp(0.5rem, 2vw, 1rem)'
-      }}>
-        {/* College Logo and Brand Header */}
-        <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', textDecoration: 'none', minWidth: 0 }}>
-          <img 
-            src="/college-logo-transparent.png" 
-            alt="NACSC Ahilyanagar Crest" 
+      {/* Unified Single Sticky Navigation Bar */}
+      <div className="container site-header-inner">
+        {/* College Emblem, Non-Truncating Title & Repositioned Secondary Badges */}
+        <Link
+          to="/"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.65rem',
+            textDecoration: 'none',
+            minWidth: 0,
+            flex: 1
+          }}
+        >
+          <img
+            src="/college-logo-transparent.png"
+            alt="NACSC Ahilyanagar Crest"
             style={{
-              width: '44px',
-              height: '44px',
+              width: '40px',
+              height: '40px',
               objectFit: 'contain',
               flexShrink: 0,
-              filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.15))'
+              filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.12))'
             }}
           />
-          <div style={{ minWidth: 0 }}>
-            <div style={{
-              fontWeight: 800,
-              fontSize: 'clamp(0.85rem, 2.5vw, 1.05rem)',
-              color: 'var(--primary)',
-              lineHeight: 1.2,
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis'
-            }}>
+          <div style={{ minWidth: 0, flex: 1 }}>
+            <div className="brand-title-text">
               {t('collegeName')}
             </div>
-            <div className="hide-on-xs" style={{ fontSize: '0.725rem', color: 'var(--text-muted)', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-              {t('hostelSystem')} • {t('portalSubtitle')}
+            <div className="brand-meta-row">
+              <span
+                style={{
+                  backgroundColor: '#fef3c7',
+                  color: '#92400e',
+                  border: '1px solid #fde68a',
+                  padding: '0.05rem 0.4rem',
+                  borderRadius: '4px',
+                  fontSize: '0.64rem',
+                  fontWeight: 800,
+                  letterSpacing: '0.03em',
+                  whiteSpace: 'nowrap'
+                }}
+              >
+                {t('autonomousBadge')}
+              </span>
+              <span
+                className="hide-on-mobile"
+                style={{
+                  backgroundColor: '#e0f2fe',
+                  color: '#0369a1',
+                  padding: '0.05rem 0.4rem',
+                  borderRadius: '4px',
+                  fontSize: '0.64rem',
+                  fontWeight: 700,
+                  whiteSpace: 'nowrap'
+                }}
+              >
+                {t('naacGrade')}
+              </span>
+              <span
+                className="hide-on-xs"
+                style={{
+                  fontSize: '0.7rem',
+                  color: 'var(--text-muted)',
+                  fontWeight: 600
+                }}
+              >
+                {t('hostelSystem')}
+              </span>
             </div>
           </div>
         </Link>
 
-        {/* Desktop Navigation */}
-        <nav className="desktop-nav" style={{ display: 'flex', alignItems: 'center', gap: '1.35rem' }}>
-          <Link to="/" style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+        {/* Desktop Navigation + Compact Marathi | EN Pill */}
+        <nav className="desktop-nav" style={{ display: 'flex', alignItems: 'center', gap: '1.1rem', flexShrink: 0 }}>
+          <Link to="/" style={{ fontWeight: 600, fontSize: '0.88rem', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '0.35rem', whiteSpace: 'nowrap' }}>
             <HomeIcon size={16} color="var(--primary)" />
             <span>{t('home')}</span>
           </Link>
 
-          <Link to="/availability" style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+          <Link to="/availability" style={{ fontWeight: 600, fontSize: '0.88rem', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '0.35rem', whiteSpace: 'nowrap' }}>
             <Bed size={16} color="var(--primary)" />
             <span>{t('availability')}</span>
           </Link>
 
+          {/* Compact Marathi | EN Pill Toggle */}
+          <div className="lang-pill-group" role="group" aria-label="Language toggle">
+            <button
+              type="button"
+              onClick={() => setLang('mr')}
+              title="मराठी भाषेत पहा"
+              className="lang-pill-btn"
+              style={{
+                backgroundColor: lang === 'mr' ? 'var(--primary)' : 'transparent',
+                color: lang === 'mr' ? '#ffffff' : 'var(--text-muted)'
+              }}
+            >
+              मराठी
+            </button>
+            <button
+              type="button"
+              onClick={() => setLang('en')}
+              title="Switch to English"
+              className="lang-pill-btn"
+              style={{
+                backgroundColor: lang === 'en' ? 'var(--primary)' : 'transparent',
+                color: lang === 'en' ? '#ffffff' : 'var(--text-muted)'
+              }}
+            >
+              EN
+            </button>
+          </div>
+
           {user ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
               <Link to={getDashboardLink()} className="btn btn-primary btn-sm">
                 <ShieldCheck size={16} />
                 <span>{t('dashboard')}</span>
@@ -270,8 +211,8 @@ export const Navbar = () => {
                     background: 'none',
                     border: '1px solid var(--border)',
                     borderRadius: '8px',
-                    width: '38px',
-                    height: '38px',
+                    width: '36px',
+                    height: '36px',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -279,7 +220,7 @@ export const Navbar = () => {
                     position: 'relative'
                   }}
                 >
-                  <Bell size={18} color="var(--text-main)" />
+                  <Bell size={17} color="var(--text-main)" />
                   {unreadCount > 0 && (
                     <span style={{
                       position: 'absolute',
@@ -304,7 +245,7 @@ export const Navbar = () => {
                 {showNotifications && (
                   <div style={{
                     position: 'absolute',
-                    top: '48px',
+                    top: '46px',
                     right: 0,
                     width: '320px',
                     backgroundColor: 'white',
@@ -342,12 +283,12 @@ export const Navbar = () => {
               </div>
 
               {/* User Dropdown / Name badge */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', borderLeft: '1px solid var(--border)', paddingLeft: '0.85rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem', borderLeft: '1px solid var(--border)', paddingLeft: '0.75rem' }}>
                 <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontWeight: 700, fontSize: '0.85rem', color: 'var(--text-main)', maxWidth: '140px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  <div style={{ fontWeight: 700, fontSize: '0.82rem', color: 'var(--text-main)', maxWidth: '130px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {user.name}
                   </div>
-                  <div style={{ fontSize: '0.725rem', color: 'var(--text-muted)' }}>
+                  <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
                     {(() => {
                       const r = (user.role || '').toUpperCase().replace(/^ROLE_/, '');
                       if (r === 'BOYS_WARDEN') return 'Boys Hostel Warden';
@@ -364,8 +305,8 @@ export const Navbar = () => {
                     background: 'none',
                     border: '1px solid var(--border)',
                     borderRadius: '8px',
-                    width: '36px',
-                    height: '36px',
+                    width: '34px',
+                    height: '34px',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -373,12 +314,12 @@ export const Navbar = () => {
                     color: 'var(--danger)'
                   }}
                 >
-                  <LogOut size={17} />
+                  <LogOut size={16} />
                 </button>
               </div>
             </div>
           ) : (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
               <Link to="/login" className="btn btn-outline btn-sm">
                 <LogIn size={15} />
                 <span>{t('login')}</span>
@@ -391,15 +332,34 @@ export const Navbar = () => {
           )}
         </nav>
 
-        {/* Mobile Hamburger Toggle Button */}
-        <div className="mobile-toggle" style={{ display: 'none' }}>
+        {/* Mobile Right Controls: Compact Pill + Hamburger Toggle */}
+        <div className="mobile-toggle" style={{ display: 'none', alignItems: 'center', gap: '0.45rem', flexShrink: 0 }}>
+          <button
+            type="button"
+            onClick={toggleLanguage}
+            aria-label="Switch language"
+            style={{
+              backgroundColor: '#f1f5f9',
+              color: 'var(--primary)',
+              border: '1px solid #cbd5e1',
+              borderRadius: '9999px',
+              padding: '0.28rem 0.55rem',
+              fontSize: '0.72rem',
+              fontWeight: 800,
+              cursor: 'pointer',
+              whiteSpace: 'nowrap'
+            }}
+          >
+            {lang === 'mr' ? 'मराठी | EN' : 'EN | मराठी'}
+          </button>
+
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             style={{
               background: 'none',
               border: '1px solid var(--border)',
               borderRadius: '8px',
-              padding: '0.45rem',
+              padding: '0.4rem',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -408,7 +368,7 @@ export const Navbar = () => {
             }}
             aria-label="Toggle navigation menu"
           >
-            {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+            {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
           </button>
         </div>
       </div>
@@ -419,74 +379,73 @@ export const Navbar = () => {
           backgroundColor: '#ffffff',
           borderBottom: '2px solid var(--primary)',
           boxShadow: 'var(--shadow-lg)',
-          padding: '1.25rem',
+          padding: '1.1rem',
           display: 'flex',
           flexDirection: 'column',
-          gap: '1rem',
+          gap: '0.85rem',
           animation: 'slideDown 0.2s ease-out'
         }}>
+          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600, lineHeight: 1.4 }}>
+            {t('societyName')} • {t('naacGrade')}
+          </div>
+
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '0.75rem', borderBottom: '1px solid var(--border)' }}>
             <span style={{ fontWeight: 700, fontSize: '0.85rem', color: 'var(--text-main)' }}>
               {user ? `${user.name}` : t('hostelSystem')}
             </span>
 
-            {/* Language Pills in Mobile Drawer */}
-            <div style={{
-              display: 'inline-flex',
-              backgroundColor: '#f1f5f9',
-              padding: '2px',
-              borderRadius: '20px',
-              border: '1px solid #cbd5e1'
-            }}>
-              <button 
+            {/* Segmented Language Pills in Mobile Drawer */}
+            <div className="lang-pill-group">
+              <button
+                type="button"
                 onClick={() => setLang('mr')}
+                className="lang-pill-btn"
                 style={{
                   backgroundColor: lang === 'mr' ? 'var(--primary)' : 'transparent',
-                  color: lang === 'mr' ? 'white' : 'var(--text-main)',
-                  fontWeight: 800,
-                  fontSize: '0.75rem',
-                  padding: '0.2rem 0.6rem',
-                  borderRadius: '16px',
-                  border: 'none',
-                  cursor: 'pointer'
+                  color: lang === 'mr' ? 'white' : 'var(--text-main)'
                 }}
               >
                 मराठी
               </button>
-              <button 
+              <button
+                type="button"
                 onClick={() => setLang('en')}
+                className="lang-pill-btn"
                 style={{
                   backgroundColor: lang === 'en' ? 'var(--primary)' : 'transparent',
-                  color: lang === 'en' ? 'white' : 'var(--text-main)',
-                  fontWeight: 800,
-                  fontSize: '0.75rem',
-                  padding: '0.2rem 0.6rem',
-                  borderRadius: '16px',
-                  border: 'none',
-                  cursor: 'pointer'
+                  color: lang === 'en' ? 'white' : 'var(--text-main)'
                 }}
               >
-                English
+                EN
               </button>
             </div>
           </div>
 
-          <Link 
-            to="/" 
+          <Link
+            to="/"
             onClick={() => setMobileMenuOpen(false)}
-            style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.5rem 0', fontWeight: 600, color: 'var(--text-main)', textDecoration: 'none' }}
+            style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.4rem 0', fontWeight: 600, color: 'var(--text-main)', textDecoration: 'none' }}
           >
             <HomeIcon size={18} color="var(--primary)" />
             <span>{t('home')}</span>
           </Link>
 
-          <Link 
-            to="/availability" 
+          <Link
+            to="/availability/boys"
             onClick={() => setMobileMenuOpen(false)}
-            style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.5rem 0', fontWeight: 600, color: 'var(--text-main)', textDecoration: 'none' }}
+            style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.4rem 0', fontWeight: 600, color: 'var(--text-main)', textDecoration: 'none' }}
           >
             <Bed size={18} color="var(--primary)" />
-            <span>{t('availability')}</span>
+            <span>{t('boysHostelShort')} — {t('availability')}</span>
+          </Link>
+
+          <Link
+            to="/availability/girls"
+            onClick={() => setMobileMenuOpen(false)}
+            style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.4rem 0', fontWeight: 600, color: 'var(--text-main)', textDecoration: 'none' }}
+          >
+            <Bed size={18} color="#0284c7" />
+            <span>{t('girlsHostelShort')} — {t('availability')}</span>
           </Link>
 
           {user ? (

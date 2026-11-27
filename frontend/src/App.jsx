@@ -5,7 +5,8 @@ import { Sidebar } from './components/Sidebar';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { useAuth } from './context/AuthContext';
 import { useUI } from './context/UIContext';
-import { Menu } from 'lucide-react';
+import { useLanguage } from './context/LanguageContext';
+import { Menu, Phone, Mail, Clock } from 'lucide-react';
 
 // Public Pages
 import { Home } from './pages/Home';
@@ -42,6 +43,7 @@ import { ChangePassword } from './pages/hostelHead/ChangePassword';
 export function App() {
   const { user } = useAuth();
   const { toggleSidebar } = useUI();
+  const { t, lang } = useLanguage();
   const location = useLocation();
 
   const isPortalRoute = location.pathname.startsWith('/student') ||
@@ -78,6 +80,7 @@ export function App() {
             {/* Public Routes */}
             <Route path="/" element={<Home />} />
             <Route path="/availability" element={<HostelAvailability />} />
+            <Route path="/availability/:hostelType" element={<HostelAvailability />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/student/receipt/:receiptNumber" element={<PaymentReceipt />} />
@@ -133,41 +136,125 @@ export function App() {
         </main>
       </div>
 
-      {/* College Footer */}
+      {/* College Footer with Official Helpdesk & Warden Contacts */}
       {!isPortalRoute && (
         <footer style={{
           backgroundColor: '#0f172a',
           color: '#94a3b8',
-          padding: '2.5rem 1.5rem',
+          padding: '2.5rem 1.25rem 2rem',
           borderTop: '1px solid #1e293b',
           fontSize: '0.85rem'
         }}>
-          <div className="container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.5rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-              <img 
-                src="/college-logo-transparent.png" 
-                alt="NACSC Logo" 
-                style={{ width: '54px', height: '54px', objectFit: 'contain', backgroundColor: 'white', borderRadius: '50%', padding: '2px' }} 
-              />
-              <div>
-                <div style={{ color: '#94a3b8', fontSize: '0.8rem', fontWeight: 600 }}>
-                  Ahilyanagar Jilha Maratha Vidya Prasarak Samaj's Ahilyanagar
+          <div className="container" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+            {/* Warden & Technical Support Helpdesk Grid */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 250px), 1fr))',
+              gap: '1.25rem',
+              paddingBottom: '1.75rem',
+              borderBottom: '1px solid rgba(148, 163, 184, 0.2)'
+            }}>
+              {/* Boys Warden Helpdesk */}
+              <div style={{ backgroundColor: 'rgba(255,255,255,0.04)', padding: '1rem 1.15rem', borderRadius: '12px', border: '1px solid rgba(148,163,184,0.15)' }}>
+                <div style={{ color: '#f8fafc', fontWeight: 800, fontSize: '0.92rem', marginBottom: '0.4rem' }}>
+                  {lang === 'mr' ? 'मुलांचे वसतिगृह हेल्पडेस्क (वॉर्डन)' : "Boys' Hostel Warden Helpdesk"}
                 </div>
-                <div style={{ color: 'white', fontWeight: 800, fontSize: '1.05rem', margin: '0.15rem 0' }}>
-                  NEW ARTS, COMMERCE & SCIENCE COLLEGE, AHILYANAGAR (AUTONOMOUS)
+                <div style={{ color: '#cbd5e1', fontWeight: 600, fontSize: '0.82rem', marginBottom: '0.5rem' }}>
+                  {lang === 'mr' ? 'प्रा. सुरेश पाटील (रेक्टर)' : 'Prof. Suresh Patil (Rector)'}
                 </div>
-                <div style={{ color: '#f59e0b', fontSize: '0.785rem', fontWeight: 700 }}>
-                  अहिल्यानगर जिल्हा मराठा विद्या प्रसारक समाज संचलित न्यू आर्ट्स, कॉमर्स अँड सायन्स कॉलेज • बोधवाक्य: "तेजो सि तेजो मे देही"
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', fontSize: '0.8rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                    <Phone size={14} color="#38bdf8" />
+                    <a href="tel:+919876543210" style={{ color: '#e2e8f0' }}>+91 98765 43210</a>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                    <Mail size={14} color="#38bdf8" />
+                    <a href="mailto:boyshead@hostel.com" style={{ color: '#e2e8f0' }}>boyshead@hostel.com</a>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', color: '#94a3b8' }}>
+                    <Clock size={14} color="#f59e0b" />
+                    <span>{t('officeHoursText')}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Girls Warden Helpdesk */}
+              <div style={{ backgroundColor: 'rgba(255,255,255,0.04)', padding: '1rem 1.15rem', borderRadius: '12px', border: '1px solid rgba(148,163,184,0.15)' }}>
+                <div style={{ color: '#f8fafc', fontWeight: 800, fontSize: '0.92rem', marginBottom: '0.4rem' }}>
+                  {lang === 'mr' ? 'मुलींचे वसतिगृह हेल्पडेस्क (वॉर्डन)' : "Girls' Hostel Warden Helpdesk"}
+                </div>
+                <div style={{ color: '#cbd5e1', fontWeight: 600, fontSize: '0.82rem', marginBottom: '0.5rem' }}>
+                  {lang === 'mr' ? 'डॉ. सुनिता देशमुख (महिला रेक्टर)' : 'Dr. Sunita Deshmukh (Lady Rector)'}
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', fontSize: '0.8rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                    <Phone size={14} color="#38bdf8" />
+                    <a href="tel:+919876543211" style={{ color: '#e2e8f0' }}>+91 98765 43211</a>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                    <Mail size={14} color="#38bdf8" />
+                    <a href="mailto:girlshead@hostel.com" style={{ color: '#e2e8f0' }}>girlshead@hostel.com</a>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', color: '#94a3b8' }}>
+                    <Clock size={14} color="#f59e0b" />
+                    <span>{t('officeHoursText')}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Technical & Portal Support */}
+              <div style={{ backgroundColor: 'rgba(255,255,255,0.04)', padding: '1rem 1.15rem', borderRadius: '12px', border: '1px solid rgba(148,163,184,0.15)' }}>
+                <div style={{ color: '#f8fafc', fontWeight: 800, fontSize: '0.92rem', marginBottom: '0.4rem' }}>
+                  {t('helpdeskTitle')}
+                </div>
+                <div style={{ color: '#cbd5e1', fontWeight: 600, fontSize: '0.82rem', marginBottom: '0.5rem' }}>
+                  {lang === 'mr' ? 'तांत्रिक व प्रवेश सहाय्य कक्ष' : 'Technical & Admission Support Desk'}
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', fontSize: '0.8rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                    <Phone size={14} color="#38bdf8" />
+                    <a href="tel:+9102412324024" style={{ color: '#e2e8f0' }}>+91 0241-2324024</a>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                    <Mail size={14} color="#38bdf8" />
+                    <a href="mailto:support.hostel@nacsc.edu.in" style={{ color: '#e2e8f0' }}>support.hostel@nacsc.edu.in</a>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', color: '#94a3b8' }}>
+                    <Clock size={14} color="#f59e0b" />
+                    <span>{lang === 'mr' ? 'सोम–शनि: १०:०० ते ५:०० (शासकीय सुट्टी वगळून)' : 'Mon–Sat: 10:00 AM – 5:00 PM (Excl. Public Holidays)'}</span>
+                  </div>
                 </div>
               </div>
             </div>
-            <div style={{ textAlign: 'right' }}>
-              <div style={{ fontWeight: 700, color: '#e2e8f0' }}>Online Hostel Admission & Management System</div>
-              <div style={{ color: '#64748b', fontSize: '0.775rem', marginTop: '0.25rem' }}>
-                मुलांचे वसतिगृह (छत्रपती शिवाजी महाराज भवन) व मुलींचे वसतिगृह (सावित्रीबाई फुले भवन)
+
+            {/* College Branding Row */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.5rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                <img 
+                  src="/college-logo-transparent.png" 
+                  alt="NACSC Logo" 
+                  style={{ width: '52px', height: '52px', objectFit: 'contain', backgroundColor: 'white', borderRadius: '50%', padding: '2px', flexShrink: 0 }} 
+                />
+                <div>
+                  <div style={{ color: '#94a3b8', fontSize: '0.78rem', fontWeight: 600 }}>
+                    Ahilyanagar Jilha Maratha Vidya Prasarak Samaj's Ahilyanagar
+                  </div>
+                  <div style={{ color: 'white', fontWeight: 800, fontSize: '1rem', margin: '0.15rem 0' }}>
+                    NEW ARTS, COMMERCE & SCIENCE COLLEGE, AHILYANAGAR (AUTONOMOUS)
+                  </div>
+                  <div style={{ color: '#f59e0b', fontSize: '0.78rem', fontWeight: 700 }}>
+                    अहिल्यानगर जिल्हा मराठा विद्या प्रसारक समाज संचलित न्यू आर्ट्स, कॉमर्स अँड सायन्स कॉलेज • बोधवाक्य: "तेजो सि तेजो मे देही"
+                  </div>
+                </div>
               </div>
-              <div style={{ color: '#38bdf8', fontSize: '0.75rem', marginTop: '0.2rem' }}>
-                🌐 द्विभाषिक प्रणाली (मराठी & English) • वसतिगृह भांडार सुविधा उपलब्ध
+              <div style={{ textAlign: 'left' }}>
+                <div style={{ fontWeight: 700, color: '#e2e8f0' }}>Online Hostel Admission & Management System</div>
+                <div style={{ color: '#64748b', fontSize: '0.775rem', marginTop: '0.25rem' }}>
+                  मुलांचे वसतिगृह (छत्रपती शिवाजी महाराज भवन) व मुलींचे वसतिगृह (सावित्रीबाई फुले भवन)
+                </div>
+                <div style={{ color: '#38bdf8', fontSize: '0.75rem', marginTop: '0.2rem' }}>
+                  🌐 द्विभाषिक प्रणाली (मराठी & English) • {t('cityAddress')}
+                </div>
               </div>
             </div>
           </div>

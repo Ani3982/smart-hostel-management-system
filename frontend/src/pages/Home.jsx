@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
-import { dashboardService } from '../services/api';
+import { dashboardService, applicationService } from '../services/api';
+import { Modal } from '../components/Modal';
 import { 
   Building2, 
-  ShieldCheck, 
   Bed, 
   Users, 
   DoorClosed, 
@@ -17,9 +17,15 @@ import {
   Shield, 
   BookOpen, 
   Award,
-  CalendarCheck,
-  ShoppingBag,
-  PackageCheck
+  Search,
+  FileText,
+  IndianRupee,
+  ChevronDown,
+  ChevronUp,
+  HelpCircle,
+  Clock,
+  XCircle,
+  AlertCircle
 } from 'lucide-react';
 
 export const Home = () => {
@@ -27,13 +33,25 @@ export const Home = () => {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Admission Transparency State: FAQ accordion, Transparency Modal, Public Status Modal
+  const [openFaqIndex, setOpenFaqIndex] = useState(0);
+  const [showTransparencyModal, setShowTransparencyModal] = useState(false);
+  const [showStatusModal, setShowStatusModal] = useState(false);
+
+  // Public 5-stage status lookup state
+  const [lookupAppId, setLookupAppId] = useState('');
+  const [lookupVerifier, setLookupVerifier] = useState('');
+  const [lookupLoading, setLookupLoading] = useState(false);
+  const [lookupError, setLookupError] = useState('');
+  const [lookupResult, setLookupResult] = useState(null);
+
   useEffect(() => {
     loadLiveStats();
   }, []);
 
   const loadLiveStats = async () => {
     try {
-      const res = await dashboardService.getAdminStats();
+      const res = await dashboardService.getPublicSummary();
       if (res.data.success) {
         setStats(res.data.data);
       }
@@ -52,17 +70,173 @@ export const Home = () => {
     }
   };
 
+  const handleStatusLookup = async (e) => {
+    e.preventDefault();
+    setLookupError('');
+    setLookupResult(null);
+
+    if (!lookupAppId.trim() || !lookupVerifier.trim()) {
+      setLookupError(
+        lang === 'mr'
+          ? 'कृपया अर्ज क्रमांक / PRN आणि जन्मतारीख किंवा रोल नंबर प्रविष्ट करा.'
+          : 'Please enter Application ID / PRN and Date of Birth or Roll Number.'
+      );
+      return;
+    }
+
+    setLookupLoading(true);
+    try {
+      const res = await applicationService.checkPublicStatus({
+        applicationId: lookupAppId.trim(),
+        verifier: lookupVerifier.trim()
+      });
+      if (res.data.success) {
+        setLookupResult(res.data.data);
+      }
+    } catch (err) {
+      setLookupError(
+        err.response?.data?.message ||
+          (lang === 'mr'
+            ? 'अर्ज सापडला नाही. कृपया तपशील तपासा.'
+            : 'No matching application found. Please verify your details.')
+      );
+    } finally {
+      setLookupLoading(false);
+    }
+  };
+
+  const faqItems = lang === 'mr'
+    ? [
+        {
+          q: 'टप्पा २ साठी कोणती आवश्यक कागदपत्रे (Required Documents) लागतात?',
+          a: 'ऑनलाईन अर्ज सादर करताना ४ कागदपत्रे अपलोड करणे आवश्यक आहे: (१) विद्यार्थ्याचा पासपोर्ट फोटो (JPG/PNG), (२) महाविद्यालयीन ओळखपत्र (College ID), (३) आधार कार्ड / राष्ट्रीय ओळख पुरावा, आणि (४) चालू शैक्षणिक वर्षाची महाविद्यालय प्रवेश फी पावती. सर्व फाइल्स PDF, JPG किंवा PNG स्वरूपात (कमाल ५ MB) असाव्यात.'
+        },
+        {
+          q: 'वसतिगृहाचे वार्षिक शुल्क ₹१५,००० कसे विभागलेले आहे?',
+          a: 'वार्षिक वसतिगृह शुल्क ₹१५,००० मध्ये खालील बाबींचा समावेश आहे: खोली व खाट भाडे (१० महिने) — ₹१०,०००; वीज, सौर गरम पाणी व वाय-फाय — ₹२,५००; सुरक्षा, स्वच्छता व देखभाल — ₹१,५००; परतावा योग्य कॉशन डिपॉझिट — ₹१,०००. (टीप: मेस / भोजन शुल्क स्वतंत्र असून ते या शुल्कात समाविष्ट नाही. वॉर्डनची मंजुरी व खाट वाटप झाल्यानंतरच ऑनलाईन शुल्क भरणा सुरू होतो.)'
+        },
+        {
+          q: 'प्रवेशासाठी पात्रता व खोली वाटपाचे नियम काय आहेत?',
+          a: 'अहिल्यानगर येथील न्यू आर्ट्स, कॉमर्स अँड सायन्स कॉलेजमध्ये प्रवेश घेतलेले विद्यार्थीच पात्र आहेत. लिंग पडताळणीनुसार मुलांना फक्त मुलांचे वसतिगृह (छत्रपती शिवाजी महाराज भवन) आणि मुलींना फक्त मुलींचे वसतिगृह (सावित्रीबाई फुले भवन) दिले जाते.'
+        }
+      ]
+    : [
+        {
+          q: 'What documents are required for Step 2 (Application Submission)?',
+          a: 'Applicants must upload 4 supporting documents during Step 2: (1) Student Passport-Size Photo (JPG/PNG), (2) College Identity Card, (3) Aadhaar Card / Government Identity Proof, and (4) Current Year College Admission Fee Receipt. Accepted formats: PDF, JPG, or PNG (max 5 MB each).'
+        },
+        {
+          q: 'What is included in the ₹15,000 / Academic Year fee breakdown?',
+          a: 'The ₹15,000 annual hostel fee comprises: Room & Bed Rent (10 Months) — ₹10,000; Electricity, Solar Hot Water & Wi-Fi — ₹2,500; Sanitation & 24/7 Campus Security — ₹1,500; Refundable Caution Deposit — ₹1,000. Clarification: Mess/canteen dining charges are separate and optional. Online fee payment activates only after Warden approval and room/bed allotment.'
+        },
+        {
+          q: 'What are the hostel eligibility and gender-segregation rules?',
+          a: 'Only enrolled students of New Arts, Commerce & Science College, Ahilyanagar are eligible. Male students are strictly assigned to Boys Hostel (North Campus) and female students strictly to Girls Hostel (South Campus).'
+        }
+      ];
+
+  const getStageLabel = (key) => {
+    const labels = {
+      REGISTRATION: lang === 'mr' ? '१. ऑनलाईन नोंदणी' : '1. Registration',
+      APPLICATION: lang === 'mr' ? '२. अर्ज व कागदपत्रे' : '2. Application & Docs',
+      WARDEN_REVIEW: lang === 'mr' ? '३. वॉर्डन पडताळणी' : '3. Warden Review',
+      ALLOCATION: lang === 'mr' ? '४. खोली व खाट वाटप' : '4. Room & Bed Allotment',
+      PAYMENT: lang === 'mr' ? '५. शुल्क भरणा व निश्चिती' : '5. Fee Payment & Confirmed'
+    };
+    return labels[key] || key;
+  };
+
+  const renderStatusLookupPanel = () => (
+    <>
+      <form onSubmit={handleStatusLookup} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+        <div>
+          <label className="form-label">{lang === 'mr' ? 'अर्ज क्रमांक किंवा विद्यार्थी PRN' : 'Application ID or Student PRN'}</label>
+          <input
+            type="text"
+            className="form-input"
+            placeholder="e.g. NACSC-2026-001 or 1"
+            value={lookupAppId}
+            onChange={(e) => setLookupAppId(e.target.value)}
+            required
+          />
+        </div>
+        <div>
+          <label className="form-label">{lang === 'mr' ? 'जन्मतारीख (YYYY-MM-DD) किंवा रोल नंबर' : 'Date of Birth (YYYY-MM-DD) or Roll No.'}</label>
+          <input
+            type="text"
+            className="form-input"
+            placeholder="e.g. 2003-05-14 or MCS-24"
+            value={lookupVerifier}
+            onChange={(e) => setLookupVerifier(e.target.value)}
+            required
+          />
+        </div>
+
+        {lookupError && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', padding: '0.65rem', backgroundColor: 'var(--danger-bg)', color: '#b91c1c', borderRadius: '8px', fontSize: '0.82rem' }}>
+            <AlertCircle size={16} style={{ flexShrink: 0 }} />
+            <span>{lookupError}</span>
+          </div>
+        )}
+
+        <button type="submit" className="btn btn-primary" disabled={lookupLoading} style={{ width: '100%' }}>
+          <Search size={16} />
+          <span>{lookupLoading ? t('loading') : t('checkAppStatus')}</span>
+        </button>
+      </form>
+
+      {lookupResult && (
+        <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid var(--border)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '0.75rem' }}>
+            <div>
+              <div style={{ fontWeight: 800, fontSize: '0.95rem', color: 'var(--primary)' }}>{lookupResult.studentName}</div>
+              <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                {lookupResult.applicationCode} • {lookupResult.studentPrn} • {lookupResult.hostelName}
+              </div>
+            </div>
+            <span className={`badge ${lookupResult.status === 'APPROVED' ? 'badge-success' : lookupResult.status === 'REJECTED' ? 'badge-danger' : 'badge-warning'}`}>
+              {t(lookupResult.status)}
+            </span>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
+            {lookupResult.stages.map((st) => {
+              const isDone = st.status === 'COMPLETED';
+              const isRej = st.status === 'REJECTED';
+              const isActive = st.status === 'IN_PROGRESS';
+              return (
+                <div key={st.step} style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: '0.5rem',
+                  padding: '0.5rem 0.65rem',
+                  borderRadius: '8px',
+                  backgroundColor: isDone ? '#ecfdf5' : isRej ? '#fef2f2' : isActive ? '#eff6ff' : '#f8fafc',
+                  border: `1px solid ${isDone ? '#a7f3d0' : isRej ? '#fecaca' : isActive ? '#bfdbfe' : '#e2e8f0'}`,
+                  fontSize: '0.8rem'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', fontWeight: 700, color: isDone ? '#065f46' : isRej ? '#991b1b' : isActive ? '#1d4ed8' : '#64748b' }}>
+                    {isDone ? <CheckCircle2 size={15} /> : isRej ? <XCircle size={15} /> : <Clock size={15} />}
+                    <span>{getStageLabel(st.key)}</span>
+                  </div>
+                  {st.detail && (
+                    <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)', textAlign: 'right' }}>{st.detail}</span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </>
+  );
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '3.5rem', paddingBottom: '4rem' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '3.25rem', paddingBottom: '4rem' }}>
       
-      {/* Hero Section with Official College Emblem and Branding */}
-      <section style={{
-        background: 'linear-gradient(135deg, #0f172a 0%, #1b3b6f 50%, #0369a1 100%)',
-        color: 'white',
-        padding: 'clamp(2.5rem, 6vw, 4.5rem) 1rem',
-        position: 'relative',
-        overflow: 'hidden'
-      }}>
+      {/* Hero Section (Compact & Above-the-Fold on Mobile) */}
+      <section className="hero-section">
         <div style={{
           position: 'absolute',
           top: '-10%',
@@ -77,82 +251,82 @@ export const Home = () => {
         <div className="container" style={{ maxWidth: '1100px', textAlign: 'center', position: 'relative', zIndex: 1 }}>
           
           {/* Official Emblem Logo */}
-          <div style={{ marginBottom: '1.25rem' }}>
-            <div style={{
-              display: 'inline-flex',
-              padding: '8px',
-              backgroundColor: 'white',
-              borderRadius: '50%',
-              boxShadow: '0 10px 25px rgba(0, 0, 0, 0.35)',
-              border: '4px solid #f59e0b'
-            }}>
+          <div>
+            <div className="hero-crest-wrapper">
               <img 
                 src="/college-logo-transparent.png" 
                 alt="NACSC Crest" 
-                style={{ width: '92px', height: '92px', objectFit: 'contain' }}
+                className="hero-crest-img"
               />
             </div>
           </div>
 
-          {/* Society & College Title Badges */}
+          {/* Society Badge */}
           <div style={{
             display: 'inline-flex',
             alignItems: 'center',
-            gap: '0.6rem',
+            gap: '0.5rem',
             backgroundColor: 'rgba(255, 255, 255, 0.12)',
-            padding: '0.45rem 1.25rem',
+            padding: '0.35rem 1rem',
             borderRadius: '9999px',
-            fontSize: '0.85rem',
+            fontSize: 'clamp(0.72rem, 1.5vw, 0.85rem)',
             fontWeight: 700,
-            marginBottom: '1rem',
+            marginBottom: '0.75rem',
             backdropFilter: 'blur(8px)',
             border: '1px solid rgba(255,255,255,0.25)'
           }}>
-            <Sparkles size={16} color="#f59e0b" />
+            <Sparkles size={15} color="#f59e0b" style={{ flexShrink: 0 }} />
             <span>{t('societyName')}</span>
           </div>
 
-          <h1 style={{
-            fontSize: 'clamp(1.75rem, 4.2vw, 3rem)',
-            fontWeight: 900,
-            lineHeight: 1.2,
-            marginBottom: '0.5rem',
-            letterSpacing: '-0.02em',
-            textTransform: 'uppercase'
-          }}>
+          <h1 className="hero-title">
             {t('collegeAutonomous')}
           </h1>
 
           <div style={{
             display: 'inline-block',
             color: '#fde68a',
-            fontSize: '1rem',
+            fontSize: 'clamp(0.85rem, 1.8vw, 1rem)',
             fontWeight: 700,
-            marginBottom: '1.25rem',
-            letterSpacing: '0.05em'
+            marginBottom: '0.75rem',
+            letterSpacing: '0.04em'
           }}>
             ॥ {t('collegeMotto')} ॥
           </div>
 
-          <p style={{
-            fontSize: 'clamp(1rem, 2vw, 1.2rem)',
-            color: '#cbd5e1',
-            maxWidth: '850px',
-            margin: '0 auto 2.5rem auto',
-            lineHeight: 1.6
-          }}>
+          <p className="hero-subtitle">
             {t('heroSubtitle')}
           </p>
 
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', flexWrap: 'wrap' }}>
-            <Link to="/register" className="btn btn-secondary" style={{ padding: '0.85rem 2rem', fontSize: '1rem', whiteSpace: 'nowrap' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+            <Link to="/register" className="btn btn-secondary" style={{ padding: '0.75rem 1.6rem', fontSize: '0.95rem', whiteSpace: 'nowrap' }}>
               <span>{t('applyNow')}</span>
-              <ArrowRight size={18} />
+              <ArrowRight size={17} />
             </Link>
 
-            <Link to="/login" className="btn btn-outline" style={{ padding: '0.85rem 2rem', fontSize: '1rem', backgroundColor: 'rgba(255,255,255,0.1)', color: 'white', borderColor: 'rgba(255,255,255,0.3)', whiteSpace: 'nowrap' }}>
+            <Link to="/login" className="btn btn-outline" style={{ padding: '0.75rem 1.6rem', fontSize: '0.95rem', backgroundColor: 'rgba(255,255,255,0.12)', color: 'white', borderColor: 'rgba(255,255,255,0.35)', whiteSpace: 'nowrap' }}>
               <span>{t('studentLogin')}</span>
             </Link>
+
+            <button
+              type="button"
+              onClick={() => {
+                setShowStatusModal(true);
+                setLookupError('');
+              }}
+              className="btn btn-outline"
+              style={{
+                padding: '0.75rem 1.4rem',
+                fontSize: '0.95rem',
+                backgroundColor: 'rgba(245, 158, 11, 0.18)',
+                color: '#fef3c7',
+                borderColor: 'rgba(245, 158, 11, 0.55)',
+                whiteSpace: 'nowrap'
+              }}
+            >
+              <Search size={16} />
+              <span>{t('checkAppStatus')}</span>
+            </button>
           </div>
         </div>
       </section>
@@ -226,7 +400,7 @@ export const Home = () => {
         </div>
       </section>
 
-      {/* Hostels Overview: Boys and Girls Hostels */}
+      {/* Hostels Overview: Boys and Girls Hostels with Dedicated Routing */}
       <section className="container">
         <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
           <h2 style={{ fontSize: '1.85rem', fontWeight: 800, color: 'var(--primary)', marginBottom: '0.5rem' }}>
@@ -277,7 +451,7 @@ export const Home = () => {
               </div>
             </div>
 
-            <Link to="/availability" className="btn btn-outline" style={{ width: '100%' }}>
+            <Link to="/availability/boys" className="btn btn-outline" style={{ width: '100%' }}>
               <span>{lang === 'mr' ? 'मुलांच्या वसतिगृहातील जागा पहा' : 'View Boys Bed Availability'}</span>
               <ArrowRight size={16} />
             </Link>
@@ -320,7 +494,7 @@ export const Home = () => {
               </div>
             </div>
 
-            <Link to="/availability" className="btn btn-outline" style={{ width: '100%' }}>
+            <Link to="/availability/girls" className="btn btn-outline" style={{ width: '100%' }}>
               <span>{lang === 'mr' ? 'मुलींच्या वसतिगृहातील जागा पहा' : 'View Girls Bed Availability'}</span>
               <ArrowRight size={16} />
             </Link>
@@ -439,8 +613,188 @@ export const Home = () => {
               </div>
             ))}
           </div>
+
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '0.85rem', flexWrap: 'wrap', marginTop: '2rem', paddingTop: '1.5rem', borderTop: '1px solid var(--border)' }}>
+            <button
+              type="button"
+              onClick={() => setShowTransparencyModal(true)}
+              className="btn btn-outline"
+              style={{ borderColor: 'var(--primary)', color: 'var(--primary)' }}
+            >
+              <FileText size={16} />
+              <span>{t('docsAndFeesFaq')}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setShowStatusModal(true);
+                setLookupError('');
+              }}
+              className="btn btn-primary"
+            >
+              <Search size={16} />
+              <span>{t('checkAppStatus')}</span>
+            </button>
+          </div>
         </div>
       </section>
+
+      {/* Admission Transparency: Expandable FAQ + Public Status Lookup Card */}
+      <section className="container">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))', gap: '1.5rem', alignItems: 'start' }}>
+          {/* Left: Expandable FAQ Accordion */}
+          <div className="card" style={{ padding: 'clamp(1.25rem, 2.5vw, 1.75rem)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <HelpCircle size={20} color="var(--primary)" />
+                <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--primary)' }}>
+                  {lang === 'mr' ? 'प्रवेश पारदर्शकता व नेहमी विचारले जाणारे प्रश्न' : 'Admission Transparency & FAQ'}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowTransparencyModal(true)}
+                className="btn btn-outline btn-sm"
+              >
+                <IndianRupee size={14} />
+                <span>{lang === 'mr' ? 'संपूर्ण तपशील पहा' : 'Full Fee & Doc Guide'}</span>
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
+              {faqItems.map((item, idx) => {
+                const isOpen = openFaqIndex === idx;
+                return (
+                  <div key={idx} className="faq-item">
+                    <button
+                      type="button"
+                      className="faq-trigger"
+                      onClick={() => setOpenFaqIndex(isOpen ? -1 : idx)}
+                      aria-expanded={isOpen}
+                    >
+                      <span>{item.q}</span>
+                      {isOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                    </button>
+                    {isOpen && (
+                      <div style={{ padding: '0.85rem 1.1rem', fontSize: '0.86rem', color: 'var(--text-muted)', lineHeight: 1.6, borderTop: '1px solid var(--border)' }}>
+                        {item.a}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Right: Public "Check Application Status" Card (No Login Required) */}
+          <div className="card" style={{ padding: 'clamp(1.25rem, 2.5vw, 1.75rem)', borderTop: '4px solid #f59e0b' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+              <Search size={20} color="#d97706" />
+              <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--primary)' }}>
+                {t('checkAppStatus')}
+              </h3>
+            </div>
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
+              {lang === 'mr'
+                ? 'लॉगिन न करता आपला अर्ज क्रमांक / PRN आणि जन्मतारीख किंवा रोल नंबर वापरून ५-टप्पे स्थिती तपासा.'
+                : 'Track your 5-stage hostel admission progress without logging in using your Application ID / PRN and DOB or Roll Number.'}
+            </p>
+
+            {renderStatusLookupPanel()}
+          </div>
+        </div>
+      </section>
+
+      {/* Modal 1: Required Documents (Step 2) & Fee Breakdown (₹15,000) */}
+      <Modal
+        isOpen={showTransparencyModal}
+        onClose={() => setShowTransparencyModal(false)}
+        title={t('docsAndFeesFaq')}
+        maxWidth="700px"
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          {/* Step 2 Documents */}
+          <div>
+            <h4 style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--primary)', marginBottom: '0.65rem', display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+              <FileText size={18} />
+              <span>{lang === 'mr' ? 'टप्पा २: अर्जासोबत अपलोड करावयाची कागदपत्रे' : 'Step 2: Required Documents Checklist'}</span>
+            </h4>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '0.65rem' }}>
+              {[
+                { title: t('uploadPhoto'), note: lang === 'mr' ? 'रंगीत पासपोर्ट फोटो (JPG/PNG)' : 'Recent passport photo (JPG/PNG)' },
+                { title: t('uploadCollegeId'), note: lang === 'mr' ? 'चालू महाविद्यालयीन ओळखपत्र' : 'Valid College ID Card' },
+                { title: t('uploadAadhaar'), note: lang === 'mr' ? 'आधार कार्ड (समोरची व मागील बाजू)' : 'Aadhaar Card / Govt ID Proof' },
+                { title: t('uploadAdmission'), note: lang === 'mr' ? 'शैक्षणिक वर्ष २०२६-२७ प्रवेश पावती' : '2026-27 College Admission Receipt' }
+              ].map((doc, i) => (
+                <div key={i} style={{ padding: '0.75rem', borderRadius: '8px', backgroundColor: '#f8fafc', border: '1px solid var(--border)' }}>
+                  <div style={{ fontWeight: 700, fontSize: '0.86rem', color: 'var(--text-main)' }}>{i + 1}. {doc.title}</div>
+                  <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>{doc.note}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* ₹15,000 Annual Fee Breakdown */}
+          <div>
+            <h4 style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--primary)', marginBottom: '0.65rem', display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+              <IndianRupee size={18} />
+              <span>{lang === 'mr' ? 'वसतिगृह वार्षिक शुल्क तपशील (₹१५,००० / शैक्षणिक वर्ष)' : 'Annual Hostel Fee Breakdown (₹15,000 / Academic Year)'}</span>
+            </h4>
+            <div className="table-container" style={{ marginBottom: '0.65rem' }}>
+              <table className="custom-table" style={{ minWidth: '100%' }}>
+                <thead>
+                  <tr>
+                    <th>{lang === 'mr' ? 'शुल्क घटक' : 'Fee Component'}</th>
+                    <th style={{ textAlign: 'right' }}>{lang === 'mr' ? 'रक्कम (₹)' : 'Amount (₹)'}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>{lang === 'mr' ? 'खोली व खाट निवास भाडे (१० महिने)' : 'Room & Bed Accommodation Rent (10 Months)'}</td>
+                    <td style={{ textAlign: 'right', fontWeight: 700 }}>₹10,000</td>
+                  </tr>
+                  <tr>
+                    <td>{lang === 'mr' ? 'वीज, सौर गरम पाणी व हाय-स्पीड वाय-फाय' : 'Electricity, Solar Hot Water & Campus Wi-Fi'}</td>
+                    <td style={{ textAlign: 'right', fontWeight: 700 }}>₹2,500</td>
+                  </tr>
+                  <tr>
+                    <td>{lang === 'mr' ? 'सुरक्षा व्यवस्था, स्वच्छता व देखभाल' : '24x7 Security, Sanitation & Maintenance'}</td>
+                    <td style={{ textAlign: 'right', fontWeight: 700 }}>₹1,500</td>
+                  </tr>
+                  <tr>
+                    <td>{lang === 'mr' ? 'परतावा योग्य कॉशन डिपॉझिट' : 'Refundable Hostel Caution Deposit'}</td>
+                    <td style={{ textAlign: 'right', fontWeight: 700 }}>₹1,000</td>
+                  </tr>
+                  <tr style={{ backgroundColor: '#ecfdf5' }}>
+                    <td style={{ fontWeight: 800, color: '#065f46' }}>{lang === 'mr' ? 'एकूण वार्षिक वसतिगृह शुल्क' : 'Total Annual Hostel Fee'}</td>
+                    <td style={{ textAlign: 'right', fontWeight: 900, color: '#065f46' }}>₹15,000</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', backgroundColor: '#fffbeb', padding: '0.65rem 0.85rem', borderRadius: '8px', border: '1px solid #fde68a' }}>
+              {lang === 'mr'
+                ? 'स्पष्टीकरण: मेस (भोजन) शुल्क स्वतंत्र असून ते या ₹१५,००० शुल्कात समाविष्ट नाही. वॉर्डन मंजुरी आणि खोली वाटपानंतरच ऑनलाईन पेमेंट पोर्टल सुरू होते.'
+                : 'Clarification: Mess/dining charges are separate and optional. Online fee payment is enabled only after Warden document verification and bed allotment.'}
+            </p>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Modal 2: Public Check Application Status */}
+      <Modal
+        isOpen={showStatusModal}
+        onClose={() => setShowStatusModal(false)}
+        title={t('checkAppStatus')}
+        maxWidth="560px"
+      >
+        <p style={{ fontSize: '0.84rem', color: 'var(--text-muted)', marginBottom: '0.85rem' }}>
+          {lang === 'mr'
+            ? 'लॉगिन न करता अर्ज क्रमांक / PRN आणि जन्मतारीख (किंवा रोल नंबर) प्रविष्ट करून तुमचा ५-टप्पे प्रवेश अहवाल पहा.'
+            : 'Enter your Application ID / PRN and Date of Birth (or College Roll Number) to check your 5-stage progress without logging in.'}
+        </p>
+        {renderStatusLookupPanel()}
+      </Modal>
 
     </div>
   );

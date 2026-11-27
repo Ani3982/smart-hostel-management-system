@@ -26,7 +26,8 @@ export const authService = {
 // Dashboard APIs (dynamically computed from backend)
 export const dashboardService = {
   getHostelStats: (hostelId) => api.get(`/dashboard/hostel/${hostelId}`),
-  getPublicSummary: () => api.get('/dashboard/public/summary')
+  getPublicSummary: () => api.get('/dashboard/public/summary'),
+  getPublicMatrix: (hostelType) => api.get(`/dashboard/public/matrix${hostelType ? `?hostelType=${encodeURIComponent(hostelType)}` : ''}`)
 };
 
 // Hostel APIs
@@ -58,6 +59,7 @@ export const bedService = {
 // Application APIs
 export const applicationService = {
   submit: (data) => api.post('/applications', data),
+  checkPublicStatus: (data) => api.post('/applications/public-status', data),
   getAll: () => api.get('/applications'),
   getPending: () => api.get('/applications/pending'),
   getByHostel: (hostelId, search = '') => api.get(`/applications/hostel/${hostelId}${search ? `?search=${encodeURIComponent(search)}` : ''}`),
